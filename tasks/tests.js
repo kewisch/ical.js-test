@@ -82,4 +82,41 @@ module.exports = function(grunt) {
       grunt.task.run('mochacli:unit');
     }
   });
+
+  grunt.registerTask('injectIntoLightning', function(xpi) {
+    var Zip = require("adm-zip");
+    var fs = require("fs");
+    var path = require("path");
+    var unidiff = require("unidiff");
+
+    if (!xpi) {
+      grunt.fail.fatal("Must pass path to a zip file");
+    }
+
+    try {
+      let zipfile = new Zip(xpi);
+      let entry = zipfile.getEntry("modules/ical.js");
+      let original = zipfile.readAsText(entry);
+
+      let marker = "// -- start ical.js --\n";
+      let markerPos = original.indexOf(marker);
+      if (markerPos < 0) {
+        throw new Error(`Could not find marker in ${xpi}!/modules/ical.js`);
+      }
+
+      let buildfile = fs.readFileSync(path.join("build", "ical.js"), "utf-8");
+      let updated = original.substr(0, markerPos + marker.length) + buildfile;
+
+      console.log(unidiff.diffAsText(original, updated, {
+        aname: "zipfile/modules/ical.js",
+        bname: "generated/modules/ical.js",
+        context: 4,
+      }));
+
+      zipfile.updateFile(entry, Buffer.from(updated, "utf-8"));
+      zipfile.writeZip();
+    } catch (e) {
+      grunt.fail.fatal(e);
+    }
+  })
 };
