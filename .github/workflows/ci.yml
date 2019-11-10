@@ -11,16 +11,30 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v1
 
+      - name: "yarn"
+        run: yarn --frozen-lockfile
+
+      - name: "grunt"
+        run: grunt
+
       - name: "Download and setup tests"
-        id: tests-setup
+        id: setup-tests
         uses: "./.github/actions/action-thunderbird-tests"
         with:
           actions: download, setup
           channel: nightly
+          xpcshellTestPaths: comm/calendar/test/unit/xpcshell-libical.ini, comm/calendar/test/unit/xpcshell-icaljs.ini
 
       - name: "Inject ical.js"
         run: |
-          echo hi
+          set -e
+          cd $TBTESTS_RES_PATH/extensions/
+          unzip \{e2fda1a4-762b-4020-b5ad-a41df1933103\}.xpi modules/ical.js
+          sed "/-- start ical.js --/r $GITHUB_WORKSPACE/build/ical.js" modules/ical.js > modules/ical.js~
+          mv modules/ical.js~ modules/ical.js
+          head -n 50 modules/ical.js
+          zip -f \{e2fda1a4-762b-4020-b5ad-a41df1933103\}.xpi modules/ical.js
+          rm -r modules
 
       - name: "Run Tests"
         uses: "./.github/actions/action-thunderbird-tests"
@@ -28,7 +42,3 @@ jobs:
           actions: run
           channel: nightly
           xpcshellTestPaths: comm/calendar/test/unit/xpcshell-libical.ini, comm/calendar/test/unit/xpcshell-icaljs.ini
-        env:
-          TBTESTS_TEST_PATH: ${{ steps.tests-setup.outputs.testPath }}
-          TBTESTS_APP_PATH: ${{ steps.tests-setup.outputs.appPath }}
-          TBTESTS_VENV_PYTHON: ${{ steps.tests-setup.outputs.venvPython }}

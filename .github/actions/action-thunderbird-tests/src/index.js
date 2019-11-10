@@ -158,7 +158,7 @@ async function createXpcshellManifest(buildPath, testPath, { manifest, includeLi
 
   if (includeLightningHeads) {
     content += "[DEFAULT]\n";
-    content += `head = ${path.join(lightning, "head_libical.js")} ${path.join(lightning, "head_consts.js")}\n` +
+    content += `head = ${path.join(lightning, "head_libical.js")} ${path.join(lightning, "head_consts.js")}\n`;
   }
 
   if (xpcshellTestPaths) {
@@ -258,20 +258,31 @@ async function main() {
     testTypes.push("xpcshell");
   }
 
-  let testPath, appPath, binPath;
+  let testPath, appPath;
 
   if (actions.has("download")) {
-    { testPath, appPath, binPath } = await download(channel, testTypes, buildout);
+    let res = await download(channel, testTypes, buildout);
+    testPath = res.testPath;
+    appPath = res.appPath;
+    core.exportVariable("TBTESTS_TEST_PATH", testPath);
+    core.exportVariable("TBTESTS_APP_PATH", appPath);
   } else {
     testPath = process.env.TBTESTS_TEST_PATH;
     appPath = process.env.TBTESTS_APP_PATH;
-    binPath = await findApp(appPath);
   }
   core.setOutput("testPath", testPath);
   core.setOutput("appPath", appPath);
 
+  let binPath = await findApp(appPath);
+  let resPath = await findApp(appPath, "Resources");
+  core.setOutput("binPath", binPath);
+  core.setOutput("resPath", resPath);
+  core.exportVariable("TBTESTS_RES_PATH", resPath);
+  core.exportVariable("TBTESTS_BIN_PATH", binPath);
+
+
   let python;
-  if (actions.has("setup") {
+  if (actions.has("setup")) {
     core.startGroup("Test harness setup");
 
     let venv = path.join(buildout, "venv");
@@ -282,6 +293,7 @@ async function main() {
     } else {
       await setupPython(venv, testPath);
     }
+    core.exportVariable("TBTESTS_VENV_PYTHON", python);
     core.endGroup();
   } else {
     python = process.env.TBTESTS_VENV_PYTHON;
@@ -293,7 +305,6 @@ async function main() {
     core.startGroup("xpcshell tests");
     core.debug("Running xpcshell tests");
     let pluginpath = path.join(await findApp(appPath, "Resources"), "plugins");
-    let manifest = path.join(repoBase, xpcshell);
     let xpcshellLog = path.join(buildout, "xpcshell-log.txt");
     let manifest = await createXpcshellManifest(buildout, testPath, {
       manifest: xpcshell && path.join(repoBase, xpcshell),
