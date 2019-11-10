@@ -30,9 +30,9 @@ jobs:
           set -e
           cd $TBTESTS_RES_PATH/extensions/
           unzip \{e2fda1a4-762b-4020-b5ad-a41df1933103\}.xpi modules/ical.js
+          diff -u modules/ical.js $GITHUB_WORKSPACE/build/ical.js
           sed "/-- start ical.js --/r $GITHUB_WORKSPACE/build/ical.js" modules/ical.js > modules/ical.js~
           mv modules/ical.js~ modules/ical.js
-          head -n 50 modules/ical.js
           zip -f \{e2fda1a4-762b-4020-b5ad-a41df1933103\}.xpi modules/ical.js
           rm -r modules
 
