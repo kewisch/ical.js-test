@@ -1,0 +1,36 @@
+name: "Build"
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: "Test"
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v1
+
+      - name: "yarn"
+        run: yarn --frozen-lockfile
+
+      - name: "grunt"
+        run: grunt
+
+      - name: "Download and setup tests"
+        id: setup-tests
+        uses: "./.github/actions/action-thunderbird-tests"
+        with:
+          actions: download, setup
+          channel: nightly
+          xpcshellTestPaths: comm/calendar/test/unit/xpcshell-icaljs.ini
+
+      - name: "Inject ical.js"
+        run: grunt injectIntoLightning:"$TBTESTS_RES_PATH/extensions/{e2fda1a4-762b-4020-b5ad-a41df1933103}.xpi"
+
+      - name: "Run tests"
+        uses: "./.github/actions/action-thunderbird-tests"
+        with:
+          actions: run
+          channel: nightly
+          xpcshellTestPaths: comm/calendar/test/unit/xpcshell-icaljs.ini
