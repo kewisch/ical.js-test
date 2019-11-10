@@ -1,0 +1,34 @@
+name: "Build"
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: "Test"
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v1
+
+      - name: "Download and setup tests"
+        id: tests-setup
+        uses: "./.github/actions/action-thunderbird-tests"
+        with:
+          actions: download, setup
+          channel: nightly
+
+      - name: "Inject ical.js"
+        run: |
+          echo hi
+
+      - name: "Run Tests"
+        uses: "./.github/actions/action-thunderbird-tests"
+        with:
+          actions: run
+          channel: nightly
+          xpcshellTestPaths: comm/calendar/test/unit/xpcshell-libical.ini, comm/calendar/test/unit/xpcshell-icaljs.ini
+        env:
+          TBTESTS_TEST_PATH: ${{ steps.tests-setup.outputs.testPath }}
+          TBTESTS_APP_PATH: ${{ steps.tests-setup.outputs.appPath }}
+          TBTESTS_VENV_PYTHON: ${{ steps.tests-setup.outputs.venvPython }}
