@@ -23,7 +23,7 @@ jobs:
         with:
           actions: download, setup
           channel: nightly
-          xpcshellTestPaths: comm/calendar/test/unit/xpcshell-libical.ini, comm/calendar/test/unit/xpcshell-icaljs.ini
+          xpcshellTestPaths: comm/calendar/test/unit/xpcshell-icaljs.ini
 
       - name: "Inject ical.js"
         run: grunt injectIntoLightning:"$TBTESTS_RES_PATH/extensions/{e2fda1a4-762b-4020-b5ad-a41df1933103}.xpi"
@@ -33,4 +33,4 @@ jobs:
         with:
           actions: run
           channel: nightly
-          xpcshellTestPaths: comm/calendar/test/unit/xpcshell-libical.ini, comm/calendar/test/unit/xpcshell-icaljs.ini
+          xpcshellTestPaths: comm/calendar/test/unit/xpcshell-icaljs.ini
