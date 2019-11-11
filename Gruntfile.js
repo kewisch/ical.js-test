@@ -29,11 +29,6 @@ module.exports = function(grunt) {
         unit: ['test/*_test.js'],
         acceptance: ['test/acceptance/*_test.js'],
         performance: ['test/performance/*_test.js']
-      },
-      validator: {
-        dev: 'https://rawgit.com/mozilla-comm/ical.js/master/build/ical.js',
-        prod: 'https://cdn.rawgit.com/mozilla-comm/ical.js/<%= travis.commit %>/build/ical.js',
-        dest: 'validator.html'
       }
     },
 
@@ -50,16 +45,6 @@ module.exports = function(grunt) {
         },
         src: ['<%= libinfo.absfiles %>'],
         dest: 'build/ical.js'
-      },
-
-      validator: {
-        options: {
-          process: function(src, filepath) {
-            return src.replace(grunt.config('libinfo.validator.dev'), grunt.config('libinfo.validator.prod'));
-          }
-        },
-        src: ['sandbox/validator.html'],
-        dest: '<%= libinfo.validator.dest %>'
       }
     },
 
@@ -230,7 +215,13 @@ module.exports = function(grunt) {
         repo: 'git@github.com:mozilla-comm/ical.js.git',
         message: 'Update API documentation and validator for <%= travis.commit %>'
       },
-      src: ['<%= libinfo.doc %>/**', '<%= libinfo.validator.dest %>']
+      src: [
+        '<%= libinfo.doc %>/**',
+        'sandbox/validator.html',
+        'build/ical.js',
+        'build/ical.min.js',
+        'build/ical.min.js.map'
+      ]
     }
   });
 
@@ -264,7 +255,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test-browser', ['karma:unit', 'karma:acceptance']);
   grunt.registerTask('test', ['test-browser', 'test-node']);
 
-  grunt.registerTask('ghpages-ci', ['jsdoc', 'concat:validator', 'run-on-master-leader:run-with-env:GITHUB_SSH_KEY:gh-pages']);
+  grunt.registerTask('ghpages-ci', ['jsdoc', 'run-on-master-leader:run-with-env:GITHUB_SSH_KEY:gh-pages']);
   grunt.registerTask('unit-ci', ['test-node:unit', 'test-node:acceptance', 'run-on-master-leader:karma:ci']);
   grunt.registerTask('coverage-ci', ['coverage', 'coveralls']);
   grunt.registerTask('test-ci', ['linters', 'unit-ci', 'coverage-ci', 'ghpages-ci']);
