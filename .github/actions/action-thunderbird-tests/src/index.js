@@ -300,6 +300,8 @@ async function main() {
   }
   core.setOutput("venvPython", python);
 
+  console.log("AAA",xpcshell || xpcshellTestPaths);
+
   // Run xpcshell tests
   if (actions.has("run") && (xpcshell || xpcshellTestPaths)) {
     console.log("Running xpcshell tests");
@@ -380,9 +382,13 @@ async function setupEnv() {
         default: "build/cache",
         describe: "The tool cache directory for the runner"
       })
-      .command("$0 <xpcshell>", "Run tests in the testing framework used by Thunderbird", (subyargs) => {
+      .option("xpcshell-core-paths", {
+        describe: "comma separated paths of the core xpcshell tests to run"
+      })
+      .command("$0 [xpcshell]", "Run tests in the testing framework used by Thunderbird", (subyargs) => {
         subyargs.positional("xpcshell", {
-          describe: "The path to the xpcshell.ini"
+          describe: "The path to the xpcshell.ini",
+          default: ""
         });
       })
       .wrap(120)
@@ -400,7 +406,9 @@ async function setupEnv() {
       INPUT_LIGHTNING: argv.lightning.toString(),
       INPUT_CHANNEL: argv.channel,
       INPUT_XPCSHELL: argv.xpcshell,
-      RUNNER_TMP: path.resolve(argv.tempdir),
+      INPUT_XPCSHELLTESTPATHS: argv.xpcshellCorePaths,
+      INPUT_ACTIONS: "download,setup,run",
+      RUNNER_TEMP: path.resolve(argv.tempdir),
       RUNNER_TOOL_CACHE: path.resolve(argv.cachedir),
     };
 

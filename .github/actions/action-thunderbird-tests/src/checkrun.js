@@ -36,18 +36,29 @@ export default class CheckRun {
       return;
     }
 
-    await this.octokit.checks.update({
-      ...this.context.repo,
-      head_sha: this.context.sha,
-      check_run_id: this.id,
-      status: "completed",
-      completed_at: new Date().toISOString(),
-      conclusion: annotations.length ? "failure" : "success",
-      output: {
-        title: this.name,
-        summary: `${pass} checks passed, ${fail} checks failed`,
-        annotations: annotations
+    try {
+      await this.octokit.checks.update({
+        ...this.context.repo,
+        head_sha: this.context.sha,
+        check_run_id: this.id,
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        conclusion: annotations.length ? "failure" : "success",
+        output: {
+          title: this.name,
+          summary: `${pass} checks passed, ${fail} checks failed`,
+          annotations: annotations
+        }
+      });
+    } catch (e) {
+      if (e.name == "HttpError" && e.status == 401) {
+        // We have a token and it failed. Likely we've been running for quite some time, the
+        // built-in token is only valid for 60 minutes. This is ok to swallow, the test will still
+        // fail but we wouldn't have a check run.
+        return;
+      } else {
+        throw e;
       }
-    });
+    }
   }
 }

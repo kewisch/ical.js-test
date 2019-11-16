@@ -28,6 +28,15 @@ jobs:
       - name: "Inject ical.js"
         run: grunt injectIntoLightning:"$TBTESTS_RES_PATH/extensions/{e2fda1a4-762b-4020-b5ad-a41df1933103}.xpi"
 
+      - name: "debug"
+        run: unzip -l "$TBTESTS_RES_PATH/extensions/{e2fda1a4-762b-4020-b5ad-a41df1933103}.xpi"
+
+      - name: "Upload lightning.xpi"
+        uses: actions/upload-artifact@master
+        with:
+          name: lightning.xpi
+          path: ${{ env.TBTESTS_RES_PATH }}/extensions/{e2fda1a4-762b-4020-b5ad-a41df1933103}.xpi
+
       - name: "Run tests"
         uses: "./.github/actions/action-thunderbird-tests"
         with:
