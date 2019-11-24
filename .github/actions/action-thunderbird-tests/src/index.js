@@ -194,21 +194,39 @@ async function parseLog(logFile, baseDir) {
       continue;
     }
 
-    if (data.action == "test_status" && data.status == "FAIL" && data.stack) {
-      fail++;
-      let stack = data.stack.split("\n");
-      let [file, , lineNr] = stack[0].split(":");
-      lineNr = parseInt(lineNr, 10);
-      annotations.push({
-        path: path.relative(baseDir, file),
-        start_line: lineNr,
-        end_line: lineNr,
-        annotation_level: "failure",
-        message: data.message,
-        title: "Test failure: " + data.subtest
-      });
-    } else if (data.action == "test_status" && data.status == "PASS") {
-      pass++;
+    if (data.action == "test_status") {
+      if (data.status == "PASS") {
+        pass++
+      } else {
+        fail++;
+        if (data.stack) {
+          let stack = data.stack.split("\n");
+          let [file, , lineNr] = stack[0].split(":");
+          lineNr = parseInt(lineNr, 10);
+          annotations.push({
+            path: path.relative(baseDir, file),
+            start_line: lineNr,
+            end_line: lineNr,
+            annotation_level: "failure",
+            message: data.message,
+            title: "Test failure: " + data.subtest
+          });
+        }
+      }
+    } else if (data.action == "test_end") {
+      switch (data.status) {
+        case "SKIP":
+        case "PASS":
+          pass++;
+          break;
+        case "FAIL":
+        case "PRECONDITION_FAILED":
+        case "TIMEOUT":
+        case "CRASH":
+        case "ASSERT":
+          fail++;
+          break;
+      }
     }
   }
 
