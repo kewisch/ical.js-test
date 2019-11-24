@@ -324,6 +324,7 @@ async function main() {
         "--keep-going",
         "--total-chunks", core.getInput("total-chunks") || 1,
         "--this-chunk", core.getInput("this-chunk") || 1,
+        core.getInput("sequential") == "true" ? "--sequential" : "",
         "--setpref", "media.peerconnection.mtransport_process=false",
         "--setpref", "network.process.enabled=false",
         "--test-plugin-path", pluginpath,

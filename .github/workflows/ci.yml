@@ -45,5 +45,6 @@ jobs:
           actions: run
           channel: nightly
           xpcshellTestPaths: comm/calendar/test/unit/xpcshell-icaljs.ini
+          sequential: true
           total-chunks: ${{ env.TOTAL_CHUNKS }}
           this-chunk: ${{ matrix.chunk }}

@@ -26,6 +26,9 @@ inputs:
   this-chunk:
     description: "When chunking tests, the current chunk"
     required: false
+  sequential:
+    description: "Run tests sequentially. Defaults to parallel"
+    required: false
 runs:
   using: "node12"
   main: "src/loader.js"
