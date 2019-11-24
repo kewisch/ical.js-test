@@ -3,10 +3,14 @@ on: [push, pull_request]
 
 jobs:
   test:
-    name: "Test"
+    name: "Test X1"
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      matrix:
+        chunk: [1,2,3,4]
+      fail-fast: false
     steps:
       - name: "Checkout"
         uses: actions/checkout@v1
@@ -28,9 +32,6 @@ jobs:
       - name: "Inject ical.js"
         run: grunt injectIntoLightning:"$TBTESTS_RES_PATH/extensions/{e2fda1a4-762b-4020-b5ad-a41df1933103}.xpi"
 
-      - name: "debug"
-        run: unzip -l "$TBTESTS_RES_PATH/extensions/{e2fda1a4-762b-4020-b5ad-a41df1933103}.xpi"
-
       - name: "Upload lightning.xpi"
         uses: actions/upload-artifact@master
         with:
@@ -43,3 +44,5 @@ jobs:
           actions: run
           channel: nightly
           xpcshellTestPaths: comm/calendar/test/unit/xpcshell-icaljs.ini
+          total-chunks: 4
+          this-chunk: ${{ matrix.chunk }}

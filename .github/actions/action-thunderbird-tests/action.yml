@@ -20,6 +20,12 @@ inputs:
   xpcshell:
     description: "Run xpcshell tests from this directory"
     required: false
+  total-chunks:
+    description: "Split tests into this amount of chunks"
+    required: false
+  this-chunk:
+    description: "When chunking tests, the current chunk"
+    required: false
 runs:
   using: "node12"
   main: "src/loader.js"
