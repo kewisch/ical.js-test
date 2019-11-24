@@ -3,13 +3,14 @@ on: [push, pull_request]
 
 jobs:
   test:
-    name: "Test X1"
+    name: "xpcshell"
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TOTAL_CHUNKS: 15
     strategy:
       matrix:
-        chunk: [1,2,3,4]
+        chunk: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
       fail-fast: false
     steps:
       - name: "Checkout"
@@ -44,5 +45,5 @@ jobs:
           actions: run
           channel: nightly
           xpcshellTestPaths: comm/calendar/test/unit/xpcshell-icaljs.ini
-          total-chunks: 4
+          total-chunks: ${{ env.TOTAL_CHUNKS }}
           this-chunk: ${{ matrix.chunk }}
