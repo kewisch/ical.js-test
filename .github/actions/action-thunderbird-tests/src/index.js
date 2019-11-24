@@ -335,10 +335,15 @@ async function main() {
         "--verbose",
       ]);
     } catch (e) {
+      console.error("FAILURE", e);
       core.setFailed("xpcshell tests failed: " + e);
     } finally {
       core.endGroup();
     }
+
+    core.startGroup("raw log");
+    console.log(fs.readFileSync(xpcshellLog, "utf-8"));
+    core.endGroup();
 
     let { pass, fail, annotations } = await parseLog(xpcshellLog, repoBase);
     console.log("Result summary:");
