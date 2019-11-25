@@ -39,6 +39,8 @@ const DOWNLOAD_BASE_MAP = {
  release: ""
 };
 
+const TEST_PASS_CONDITIONS = ["SKIP", "PASS", "OK"];
+
 async function getBuildId(base, version, platform) {
   let info = await request({
     url: `${base}/thunderbird-${version}.en-US.${platform}.json`,
@@ -194,38 +196,39 @@ async function parseLog(logFile, baseDir) {
       continue;
     }
 
-    if (data.action == "test_status") {
-      if (data.status == "PASS") {
-        pass++
-      } else {
-        fail++;
-        if (data.stack) {
-          let stack = data.stack.split("\n");
-          let [file, , lineNr] = stack[0].split(":");
-          lineNr = parseInt(lineNr, 10);
-          annotations.push({
-            path: path.relative(baseDir, file),
-            start_line: lineNr,
-            end_line: lineNr,
-            annotation_level: "failure",
-            message: data.message,
-            title: "Test failure: " + data.subtest
-          });
-        }
-      }
+    if (data.action == "test_status" && data.status != "PASS" && data.stack) {
+      let stack = data.stack.split("\n");
+      let [file, , lineNr] = stack[0].split(":");
+      lineNr = parseInt(lineNr, 10);
+      annotations.push({
+        path: path.relative(baseDir, file),
+        start_line: lineNr,
+        end_line: lineNr,
+        annotation_level: "failure",
+        message: data.message,
+        title: "Test failure: " + data.subtest
+      });
     } else if (data.action == "test_end") {
-      switch (data.status) {
-        case "SKIP":
-        case "PASS":
-          pass++;
-          break;
-        case "FAIL":
-        case "PRECONDITION_FAILED":
-        case "TIMEOUT":
-        case "CRASH":
-        case "ASSERT":
-          fail++;
-          break;
+      if (TEST_PASS_CONDITIONS.includes(data.status)) {
+        pass++;
+      } else {
+        let testpath = path.relative(baseDir, file);
+        let parts = file.split("/");
+
+        // This isn't ideal, but if the test is from the core tests we want a better path name
+        let idx = parts.indexOf("hostedtoolcache");
+        if (idx > -1) {
+          testpath = parts.slice(idx + 6).join("/");
+        }
+
+        annotations.push({
+          path: testpath,
+          start_line: 1,
+          end_line: 1,
+          annotation_level: "failure",
+          message: data.message,
+          title: "Test failed: " + testpath
+        });
       }
     }
   }
@@ -317,8 +320,6 @@ async function main() {
     python = process.env.TBTESTS_VENV_PYTHON;
   }
   core.setOutput("venvPython", python);
-
-  console.log("AAA",xpcshell || xpcshellTestPaths);
 
   // Run xpcshell tests
   if (actions.has("run") && (xpcshell || xpcshellTestPaths)) {
